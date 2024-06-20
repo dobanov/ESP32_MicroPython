@@ -1,0 +1,13 @@
+How to install MicroPython on ESP32
+1.
+pip install esptool
+2.
+esptool.py --chip esp32 erase_flash
+3.
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 ESP32_GENERIC-20240602-v1.23.0.bin
+4.
+pip install adafruit-ampy
+5.
+ampy --port /dev/ttyUSB0 put main.py
+6.
+ampy --port /dev/ttyUSB0 reset
