@@ -19,15 +19,28 @@ def save_led_states(states):
 def load_led_states():
     try:
         with open('led_states.json', 'r') as f:
-            return ujson.load(f)
-    except:
-        return {'led_14': 0, 'led_12': 0, 'led_13': 0}
+            states = ujson.load(f)
+            # Ensure all keys exist and have valid values
+            for key in ['led_14_brightness', 'led_14_state', 'led_12_brightness', 'led_12_state', 'led_13_brightness', 'led_13_state']:
+                if key not in states:
+                    states[key] = 0  # Set default value if key is missing
+            return states
+    except Exception as e:
+        print('Failed to load LED states:', e)
+        return {
+            'led_14_brightness': 0,
+            'led_14_state': 0,
+            'led_12_brightness': 0,
+            'led_12_state': 0,
+            'led_13_brightness': 0,
+            'led_13_state': 0
+        }
 
 # Load initial LED states
 led_states = load_led_states()
-led_14.duty(led_states['led_14'])
-led_12.duty(led_states['led_12'])
-led_13.duty(led_states['led_13'])
+led_14.duty(led_states['led_14_brightness'])
+led_12.duty(led_states['led_12_brightness'])
+led_13.duty(led_states['led_13_brightness'])
 
 def web_page():
     # Create the HTML page
@@ -36,18 +49,18 @@ def web_page():
     h1{color: #0F3376; padding: 2vh;}p{font-size: 1.5rem;}.button{display: inline-block; background-color: #e7bd3b; border: none;
     border-radius: 4px; color: white; padding: 16px 40px; text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}
     .button2{background-color: #4286f4;}.slider{width: 100%;}</style></head><body> <h1>ESP Web Server</h1>
-    <p>GPIO 14 state: <strong>""" + str(led_states['led_14']) + """</strong></p>
-    <p>GPIO 12 state: <strong>""" + str(led_states['led_12']) + """</strong></p>
-    <p>GPIO 13 state: <strong>""" + str(led_states['led_13']) + """</strong></p>
+    <p>GPIO 14 state: <strong>""" + ("ON" if led_states['led_14_state'] == 1 else "OFF") + """</strong></p>
+    <p>GPIO 12 state: <strong>""" + ("ON" if led_states['led_12_state'] == 1 else "OFF") + """</strong></p>
+    <p>GPIO 13 state: <strong>""" + ("ON" if led_states['led_13_state'] == 1 else "OFF") + """</strong></p>
     <p><a href="/?led14=on"><button class="button">ON</button></a>
     <a href="/?led14=off"><button class="button button2">OFF</button></a></p>
     <p><a href="/?led12=on"><button class="button">ON</button></a>
     <a href="/?led12=off"><button class="button button2">OFF</button></a></p>
     <p><a href="/?led13=on"><button class="button">ON</button></a>
     <a href="/?led13=off"><button class="button button2">OFF</button></a></p>
-    <p>LED 14 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_14']) + """ class="slider" id="led14_brightness" onchange="updateBrightness(14, this.value)">
-    <p>LED 12 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_12']) + """ class="slider" id="led12_brightness" onchange="updateBrightness(12, this.value)">
-    <p>LED 13 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_13']) + """ class="slider" id="led13_brightness" onchange="updateBrightness(13, this.value)">
+    <p>LED 14 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_14_brightness']) + """ class="slider" id="led14_brightness" onchange="updateBrightness(14, this.value)">
+    <p>LED 12 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_12_brightness']) + """ class="slider" id="led12_brightness" onchange="updateBrightness(12, this.value)">
+    <p>LED 13 Brightness: <input type="range" min="0" max="1023" value=""" + str(led_states['led_13_brightness']) + """ class="slider" id="led13_brightness" onchange="updateBrightness(13, this.value)">
     <script>
     function updateBrightness(led, value) {
         var xhr = new XMLHttpRequest();
@@ -77,43 +90,45 @@ def handle_client(conn):
 
         if led14_on == 6:
             print('LED 14 ON')
-            led_14.duty(1023)
-            led_states['led_14'] = 1023
-        if led14_off == 6:
+            led_14.duty(led_states['led_14_brightness'])
+            led_states['led_14_state'] = 1
+        elif led14_off == 6:
             print('LED 14 OFF')
             led_14.duty(0)
-            led_states['led_14'] = 0
-        if led12_on == 6:
-            print('LED 12 ON')
-            led_12.duty(1023)
-            led_states['led_12'] = 1023
-        if led12_off == 6:
-            print('LED 12 OFF')
-            led_12.duty(0)
-            led_states['led_12'] = 0
-        if led13_on == 6:
-            print('LED 13 ON')
-            led_13.duty(1023)
-            led_states['led_13'] = 1023
-        if led13_off == 6:
-            print('LED 13 OFF')
-            led_13.duty(0)
-            led_states['led_13'] = 0
-        if led14_brightness != -1:
+            led_states['led_14_state'] = 0
+        elif led14_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 14 Brightness:', brightness)
             led_14.duty(brightness)
-            led_states['led_14'] = brightness
-        if led12_brightness != -1:
+            led_states['led_14_brightness'] = brightness
+
+        if led12_on == 6:
+            print('LED 12 ON')
+            led_12.duty(led_states['led_12_brightness'])
+            led_states['led_12_state'] = 1
+        elif led12_off == 6:
+            print('LED 12 OFF')
+            led_12.duty(0)
+            led_states['led_12_state'] = 0
+        elif led12_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 12 Brightness:', brightness)
             led_12.duty(brightness)
-            led_states['led_12'] = brightness
-        if led13_brightness != -1:
+            led_states['led_12_brightness'] = brightness
+
+        if led13_on == 6:
+            print('LED 13 ON')
+            led_13.duty(led_states['led_13_brightness'])
+            led_states['led_13_state'] = 1
+        elif led13_off == 6:
+            print('LED 13 OFF')
+            led_13.duty(0)
+            led_states['led_13_state'] = 0
+        elif led13_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 13 Brightness:', brightness)
             led_13.duty(brightness)
-            led_states['led_13'] = brightness
+            led_states['led_13_brightness'] = brightness
 
         save_led_states(led_states)
 
