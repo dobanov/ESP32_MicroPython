@@ -38,9 +38,9 @@ def load_led_states():
 
 # Load initial LED states
 led_states = load_led_states()
-led_14.duty(led_states['led_14_brightness'])
-led_12.duty(led_states['led_12_brightness'])
-led_13.duty(led_states['led_13_brightness'])
+led_14.duty(led_states['led_14_brightness'] if led_states['led_14_state'] == 1 else 0)
+led_12.duty(led_states['led_12_brightness'] if led_states['led_12_state'] == 1 else 0)
+led_13.duty(led_states['led_13_brightness'] if led_states['led_13_state'] == 1 else 0)
 
 def web_page():
     # Create the HTML page
@@ -90,45 +90,48 @@ def handle_client(conn):
 
         if led14_on == 6:
             print('LED 14 ON')
-            led_14.duty(led_states['led_14_brightness'])
             led_states['led_14_state'] = 1
+            led_14.duty(led_states['led_14_brightness'])
         elif led14_off == 6:
             print('LED 14 OFF')
-            led_14.duty(0)
             led_states['led_14_state'] = 0
+            led_14.duty(0)
         elif led14_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 14 Brightness:', brightness)
-            led_14.duty(brightness)
             led_states['led_14_brightness'] = brightness
+            if led_states['led_14_state'] == 1:
+                led_14.duty(brightness)
 
         if led12_on == 6:
             print('LED 12 ON')
-            led_12.duty(led_states['led_12_brightness'])
             led_states['led_12_state'] = 1
+            led_12.duty(led_states['led_12_brightness'])
         elif led12_off == 6:
             print('LED 12 OFF')
-            led_12.duty(0)
             led_states['led_12_state'] = 0
+            led_12.duty(0)
         elif led12_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 12 Brightness:', brightness)
-            led_12.duty(brightness)
             led_states['led_12_brightness'] = brightness
+            if led_states['led_12_state'] == 1:
+                led_12.duty(brightness)
 
         if led13_on == 6:
             print('LED 13 ON')
-            led_13.duty(led_states['led_13_brightness'])
             led_states['led_13_state'] = 1
+            led_13.duty(led_states['led_13_brightness'])
         elif led13_off == 6:
             print('LED 13 OFF')
-            led_13.duty(0)
             led_states['led_13_state'] = 0
+            led_13.duty(0)
         elif led13_brightness != -1:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 13 Brightness:', brightness)
-            led_13.duty(brightness)
             led_states['led_13_brightness'] = brightness
+            if led_states['led_13_state'] == 1:
+                led_13.duty(brightness)
 
         save_led_states(led_states)
 
