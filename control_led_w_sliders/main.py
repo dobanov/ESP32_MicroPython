@@ -1,14 +1,37 @@
 from machine import Pin, PWM, reset, Timer
 import socket
+import ujson
 
 # Initialize PWM for LEDs
 led_14 = PWM(Pin(14), freq=1000)
 led_12 = PWM(Pin(12), freq=1000)
 led_13 = PWM(Pin(13), freq=1000)
 
+# Function to save the brightness values to a file
+def save_brightness(brightness_values):
+    try:
+        with open('brightness.json', 'w') as f:
+            ujson.dump(brightness_values, f)
+    except Exception as e:
+        print('Failed to save brightness values:', e)
+
+# Function to load the brightness values from a file
+def load_brightness():
+    try:
+        with open('brightness.json', 'r') as f:
+            return ujson.load(f)
+    except:
+        return {'led_14': 0, 'led_12': 0, 'led_13': 0}
+
+# Load initial brightness values
+brightness_values = load_brightness()
+led_14.duty(brightness_values['led_14'])
+led_12.duty(brightness_values['led_12'])
+led_13.duty(brightness_values['led_13'])
+
 # Watchdog Timer setup (2 minutes timeout)
 wdt = Timer(1)
-wdt.init(period=120000, mode=Timer.PERIODIC, callback=lambda t: reset())
+wdt.init(period=36000000, mode=Timer.PERIODIC, callback=lambda t: reset())
 
 def web_page():
     # Create the HTML page with sliders
@@ -42,14 +65,19 @@ def handle_client(conn):
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 14 Brightness:', brightness)
             led_14.duty(brightness)
+            brightness_values['led_14'] = brightness
         if '/?led12=' in request:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 12 Brightness:', brightness)
             led_12.duty(brightness)
+            brightness_values['led_12'] = brightness
         if '/?led13=' in request:
             brightness = int(request.split('=')[1].split(' ')[0])
             print('LED 13 Brightness:', brightness)
             led_13.duty(brightness)
+            brightness_values['led_13'] = brightness
+
+        save_brightness(brightness_values)
 
         response = web_page()
         conn.send('HTTP/1.1 200 OK\n')
