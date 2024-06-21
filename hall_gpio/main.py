@@ -2,7 +2,6 @@ from machine import ADC, Pin
 import socket
 
 # Initialize the hall sensor and LEDs
-hall_sensor = ADC(Pin(36))
 led_14 = Pin(14, Pin.OUT)
 led_12 = Pin(12, Pin.OUT)
 led_13 = Pin(13, Pin.OUT)
@@ -24,7 +23,6 @@ def web_page():
     <p>GPIO 14 state: <strong>""" + gpio_14_state + """</strong></p>
     <p>GPIO 12 state: <strong>""" + gpio_12_state + """</strong></p>
     <p>GPIO 13 state: <strong>""" + gpio_13_state + """</strong></p>
-    <p>Hall sensor value: <strong>""" + str(hall_sensor_value) + """</strong></p>
     <p><a href="/?led14=on"><button class="button">ON</button></a>
     <a href="/?led14=off"><button class="button button2">OFF</button></a></p>
     <p><a href="/?led12=on"><button class="button">ON</button></a>
