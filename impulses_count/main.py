@@ -2,6 +2,7 @@ from machine import Pin
 import utime
 import urequests
 import ujson
+import usocket as socket
 
 # Telegram bot token and chat IDs
 BOT_TOKEN = "YOUR_BOT_TOKEN"
