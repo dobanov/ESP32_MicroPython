@@ -24,7 +24,7 @@ def connect_wifi(ssid, password, timeout=20):
         utime.sleep(1)
 
     print('Connected to Wi-Fi')
-    print('IP address:', wifi.ifconfig()[0])
+    print('IP address:', wifi.ifconfig())
     return True
 
 # Connect to Wi-Fi
