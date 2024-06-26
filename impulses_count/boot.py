@@ -3,7 +3,6 @@ import network
 import ntptime
 import utime
 import sys
-from machine import RTC
 
 # Wi-Fi configuration
 ssid = 'your_SSID'
@@ -39,13 +38,11 @@ def connect_wifi(ssid, password, retry_interval=5):
 
 # Function to get NTP time and adjust RTC
 def get_ntp_time():
-    rtc = RTC()
     for server in ntp_servers:
         try:
             ntptime.host = server  # Set NTP server
             ntptime.settime()  # Synchronize time with the current NTP server
             print(f'Time synchronized with {server}')
-            rtc.datetime((rtc.datetime()[0], rtc.datetime()[1], rtc.datetime()[2], (rtc.datetime()[3] + time_zone) % 24, rtc.datetime()[4], rtc.datetime()[5], rtc.datetime()[6], rtc.datetime()[7] + time_zone * 3600))
             break
         except OSError as e:
             print(f"Failed to synchronize time with {server}: {e}")
