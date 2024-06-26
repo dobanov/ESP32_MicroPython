@@ -1,3 +1,4 @@
+import gc
 from machine import Pin
 import utime
 import urequests
@@ -29,21 +30,28 @@ def send_text_to_telegram(bot_token, chat_ids, message):
 
     for chat_id in chat_ids_list:
         payload = ujson.dumps({"chat_id": chat_id, "text": message})
-        response = urequests.post(url, headers=headers, data=payload)
-        response.close()
+        try:
+            response = urequests.post(url, headers=headers, data=payload)
+            response.close()
+        except Exception as e:
+            print(f"Failed to send message to {chat_id}: {e}")
 
 # Function to read counter from file
 def read_counter_from_file(filename):
     try:
         with open(filename, 'r') as file:
             return int(file.read())
-    except (OSError, ValueError):
+    except (OSError, ValueError) as e:
+        print(f"Failed to read from {filename}: {e}")
         return 0
 
 # Function to write counter to file
 def write_counter_to_file(filename, counter):
-    with open(filename, 'w') as file:
-        file.write(str(counter))
+    try:
+        with open(filename, 'w') as file:
+            file.write(str(counter))
+    except OSError as e:
+        print(f"Failed to write to {filename}: {e}")
 
 # Function to handle pin interrupts
 def handle_pin_interrupt(pin, pin_number, message_sent, last_interrupt_time, filename, description):
@@ -84,82 +92,85 @@ pin12.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=handle_pin12_interru
 
 # Function to handle HTTP connections
 def handle_http_connection(client_socket):
-    request = client_socket.recv(1024)
-    request_str = request.decode('utf-8')
-    print('Request:')
-    print(request_str)
+    try:
+        request = client_socket.recv(1024)
+        request_str = request.decode('utf-8')
+        print('Request:')
+        print(request_str)
 
-    # Generate HTML response with current time, hot, and cold values
-    current_time = utime.localtime()
-    formatted_time = f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
-    html = f"""<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ESP32 Data</title>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                background-color: #f0f0f0;
-                margin: 20px;
-                padding: 20px;
-            }}
-            h1 {{
-                color: #333;
-            }}
-            .container {{
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }}
-            .data-item {{
-                margin-bottom: 10px;
-                padding: 10px;
-                border-bottom: 1px solid #ddd;
-            }}
-            .data-item:last-child {{
-                border-bottom: none;
-            }}
-            .data-label {{
-                font-weight: bold;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>ESP32 Data</h1>
-            <div class="data-item">
-                <span class="data-label">Current Time:</span> {formatted_time}
+        # Generate HTML response with current time, hot, and cold values
+        current_time = utime.localtime()
+        formatted_time = f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
+        html = f"""<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ESP32 Data</title>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    background-color: #f0f0f0;
+                    margin: 20px;
+                    padding: 20px;
+                }}
+                h1 {{
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }}
+                .data-item {{
+                    margin-bottom: 10px;
+                    padding: 10px;
+                    border-bottom: 1px solid #ddd;
+                }}
+                .data-item:last-child {{
+                    border-bottom: none;
+                }}
+                .data-label {{
+                    font-weight: bold;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>ESP32 Data</h1>
+                <div class="data-item">
+                    <span class="data-label">Current Time:</span> {formatted_time}
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Hot:</span> {read_counter_from_file('hot')}
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Cold:</span> {read_counter_from_file('cold')}
+                </div>
             </div>
-            <div class="data-item">
-                <span class="data-label">Hot:</span> {read_counter_from_file('hot')}
-            </div>
-            <div class="data-item">
-                <span class="data-label">Cold:</span> {read_counter_from_file('cold')}
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+        </body>
+        </html>
+        """
 
-    # HTTP response headers
-    response_headers = [
-        'HTTP/1.1 200 OK',
-        'Content-Type: text/html',
-        'Connection: close',
-        f'Content-Length: {len(html)}',
-        '\n'
-    ]
+        # HTTP response headers
+        response_headers = [
+            'HTTP/1.1 200 OK',
+            'Content-Type: text/html',
+            'Connection: close',
+            f'Content-Length: {len(html)}',
+            '\n'
+        ]
 
-    # Send HTTP response
-    client_socket.send('\n'.join(response_headers).encode('utf-8'))
-    client_socket.send(html.encode('utf-8'))
-
-    client_socket.close()
+        # Send HTTP response
+        client_socket.send('\n'.join(response_headers).encode('utf-8'))
+        client_socket.send(html.encode('utf-8'))
+    except Exception as e:
+        print(f"Failed to handle HTTP connection: {e}")
+    finally:
+        client_socket.close()
 
 # Create a TCP/IP socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -224,5 +235,6 @@ try:
             utime.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
 
         utime.sleep_ms(1000)
+        gc.collect()  # Collect garbage to free up memory
 except KeyboardInterrupt:
     print("Program terminated by user.")
