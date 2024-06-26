@@ -1,45 +1,41 @@
+
 import network
-import esp
 import ntptime
 import utime
+import sys
 from machine import RTC
-import gc
-
-gc.collect()
 
 # Wi-Fi configuration
 ssid = 'your_SSID'
 password = 'your_PASSWORD'
-
-# Function to connect to Wi-Fi
-def connect_wifi(ssid, password, timeout=20):
-    wifi = network.WLAN(network.STA_IF)
-    wifi.active(True)
-    wifi.connect(ssid, password)
-
-    start_time = utime.time()
-    while not wifi.isconnected():
-        if utime.time() - start_time > timeout:
-            print("Wi-Fi connection timed out")
-            return False
-        utime.sleep(1)
-
-    print('Connected to Wi-Fi')
-    print('IP address:', wifi.ifconfig())
-    return True
-
-# Connect to Wi-Fi
-if not connect_wifi(ssid, password):
-    # Handle Wi-Fi connection failure here if needed
-    print("Could not connect to Wi-Fi, exiting...")
-    import sys
-    sys.exit()
 
 # List of NTP servers to try
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
 
 # Time zone setting
 time_zone = 3  # UTC+3
+
+# Function to connect to Wi-Fi
+def connect_wifi(ssid, password, retry_interval=5):
+    wifi = network.WLAN(network.STA_IF)
+    wifi.active(True)
+
+    while True:
+        wifi.connect(ssid, password)
+        print("Attempting to connect to Wi-Fi...")
+
+        start_time = utime.time()
+        while not wifi.isconnected():
+            if utime.time() - start_time > retry_interval:
+                print("Wi-Fi connection attempt failed, retrying...")
+                break
+            utime.sleep(1)
+
+        if wifi.isconnected():
+            print('Connected to Wi-Fi')
+            print('IP address:', wifi.ifconfig())
+            return True
+
 
 # Function to get NTP time and adjust RTC
 def get_ntp_time():
@@ -53,6 +49,9 @@ def get_ntp_time():
             break
         except OSError as e:
             print(f"Failed to synchronize time with {server}: {e}")
+
+# Attempt to connect to Wi-Fi
+connect_wifi(ssid, password)
 
 # Get NTP time
 get_ntp_time()
