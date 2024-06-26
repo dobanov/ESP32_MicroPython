@@ -20,9 +20,6 @@ last_interrupt_time_12 = 0
 
 debounce_delay = 200  # Delay in milliseconds
 
-# Initialize RTC
-rtc = RTC()
-
 # Function to send a message to Telegram
 def send_text_to_telegram(bot_token, chat_ids, message):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
