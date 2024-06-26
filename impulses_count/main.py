@@ -167,11 +167,62 @@ server_socket.bind(('', 80))
 server_socket.listen(5)
 print('Web server started on port 80')
 
-# Main loop to handle incoming HTTP connections
+# Function to calculate daily consumption and send report
+def send_daily_report():
+    hot_last_day = read_counter_from_file('hot_last_day')
+    hot_total = read_counter_from_file('hot')
+    cold_last_day = read_counter_from_file('cold_last_day')
+    cold_total = read_counter_from_file('cold')
+
+    hot_this_day = hot_total - hot_last_day
+    cold_this_day = cold_total - cold_last_day
+
+    write_counter_to_file('hot_last_day', hot_total)
+    write_counter_to_file('cold_last_day', cold_total)
+
+    message = f"Daily report: {hot_this_day}0 liters of hot water and {cold_this_day}0 liters of cold water"
+    send_text_to_telegram(BOT_TOKEN, CHAT_ID, message)
+    print(message)
+
+# Function to calculate monthly consumption and send report
+def send_monthly_report():
+    hot_last_month = read_counter_from_file('hot_last_month')
+    hot_total = read_counter_from_file('hot')
+    cold_last_month = read_counter_from_file('cold_last_month')
+    cold_total = read_counter_from_file('cold')
+
+    hot_this_month = hot_total - hot_last_month
+    cold_this_month = cold_total - cold_last_month
+
+    write_counter_to_file('hot_last_month', hot_total)
+    write_counter_to_file('cold_last_month', cold_total)
+
+    message = f"Monthly report: {hot_this_month}0 liters of hot water and {cold_this_month}0 liters of cold water"
+    send_text_to_telegram(BOT_TOKEN, CHAT_ID, message)
+    print(message)
+
+# Main loop to handle incoming HTTP connections and send reports
 try:
     while True:
+        # Handle HTTP connections
         client_socket, addr = server_socket.accept()
         print('Client connected from:', addr)
         handle_http_connection(client_socket)
+
+        # Adjust time for UTC+3
+        local_time = list(utime.localtime())
+        local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
+
+        # Check if it is 00:01 and send daily report
+        if local_time[3] == 0 and local_time[4] == 1:
+            send_daily_report()
+            utime.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+
+        # Check if it is 1st of the month and 00:01 and send monthly report
+        if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
+            send_monthly_report()
+            utime.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+
+        utime.sleep_ms(1000)
 except KeyboardInterrupt:
     print("Program terminated by user.")
