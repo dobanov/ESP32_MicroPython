@@ -1,7 +1,8 @@
 import network
+import esp
 import ntptime
 import utime
-import machine
+from machine import RTC
 import gc
 
 gc.collect()
