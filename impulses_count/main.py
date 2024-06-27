@@ -1,17 +1,17 @@
 import gc
-from machine import Pin
+import machine
+import uasyncio as asyncio
 import utime
 import urequests
 import ujson
-import usocket as socket
 
 # Telegram bot token and chat IDs
 BOT_TOKEN = "YOUR_BOT_TOKEN"
 CHAT_ID = "YOUR_CHAT_ID1,YOUR_CHAT_ID2"  # Separate multiple chat IDs with commas
 
 # Initialize pins
-pin14 = Pin(14, Pin.IN, Pin.PULL_UP)
-pin12 = Pin(12, Pin.IN, Pin.PULL_UP)
+pin14 = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_UP)
+pin12 = machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)
 
 # Initialize variables
 message_sent_14 = False
@@ -87,20 +87,20 @@ def handle_pin12_interrupt(pin):
     message_sent_12, last_interrupt_time_12 = handle_pin_interrupt(pin, 12, message_sent_12, last_interrupt_time_12, 'hot', 'hot')
 
 # Configure interrupts for both pins
-pin14.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=handle_pin14_interrupt)
-pin12.irq(trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING, handler=handle_pin12_interrupt)
+pin14.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin14_interrupt)
+pin12.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin12_interrupt)
 
 # Function to handle HTTP connections
-def handle_http_connection(client_socket):
+async def handle_client(reader, writer):
     try:
-        request = client_socket.recv(1024)
+        request = await reader.read(1024)
         request_str = request.decode('utf-8')
         print('Request:')
         print(request_str)
 
         # Generate HTML response with current time, hot, and cold values
         current_time = utime.localtime()
-        formatted_time = f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
+        formatted_time = f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + 3) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
         html = f"""<!DOCTYPE html>
         <html lang="en">
         <head>
@@ -165,18 +165,19 @@ def handle_http_connection(client_socket):
         ]
 
         # Send HTTP response
-        client_socket.send('\n'.join(response_headers).encode('utf-8'))
-        client_socket.send(html.encode('utf-8'))
+        writer.write('\n'.join(response_headers).encode('utf-8'))
+        writer.write(html.encode('utf-8'))
+        await writer.drain()
     except Exception as e:
         print(f"Failed to handle HTTP connection: {e}")
     finally:
-        client_socket.close()
+        writer.close()
+        await writer.wait_closed()
 
-# Create a TCP/IP socket
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(('', 80))
-server_socket.listen(5)
-print('Web server started on port 80')
+async def web_server_task():
+    server = await asyncio.start_server(handle_client, "0.0.0.0", 80)
+    while True:
+        await asyncio.sleep(1)
 
 # Function to calculate daily consumption and send report
 def send_daily_report():
@@ -212,14 +213,8 @@ def send_monthly_report():
     send_text_to_telegram(BOT_TOKEN, CHAT_ID, message)
     print(message)
 
-# Main loop to handle incoming HTTP connections and send reports
-try:
+async def other_logic_task():
     while True:
-        # Handle HTTP connections
-        client_socket, addr = server_socket.accept()
-        print('Client connected from:', addr)
-        handle_http_connection(client_socket)
-
         # Adjust time for UTC+3
         local_time = list(utime.localtime())
         local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
@@ -227,14 +222,23 @@ try:
         # Check if it is 00:01 and send daily report
         if local_time[3] == 0 and local_time[4] == 1:
             send_daily_report()
-            utime.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+            await asyncio.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
 
         # Check if it is 1st of the month and 00:01 and send monthly report
         if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
             send_monthly_report()
-            utime.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+            await asyncio.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
 
-        utime.sleep_ms(1000)
+        await asyncio.sleep(1)
         gc.collect()  # Collect garbage to free up memory
+
+async def main():
+    await asyncio.gather(
+        web_server_task(),
+        other_logic_task()
+    )
+
+try:
+    asyncio.run(main())
 except KeyboardInterrupt:
     print("Program terminated by user.")
