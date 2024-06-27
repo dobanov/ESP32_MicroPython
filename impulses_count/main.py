@@ -9,6 +9,7 @@ import ujson
 BOT_TOKEN = "YOUR_BOT_TOKEN"
 CHAT_ID = "YOUR_CHAT_ID1,YOUR_CHAT_ID2"  # Separate multiple chat IDs with commas
 
+
 # Initialize pins
 pin14 = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_UP)
 pin12 = machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -102,6 +103,11 @@ async def handle_client(reader, writer):
         # Generate HTML response with current time, hot, and cold values
         current_time = utime.localtime()
         formatted_time = f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + 3) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
+
+        # Read counters only once for efficiency
+        hot_counter = read_counter_from_file('hot')
+        cold_counter = read_counter_from_file('cold')
+
         html = f"""<!DOCTYPE html>
         <html lang="en">
         <head>
@@ -146,10 +152,10 @@ async def handle_client(reader, writer):
                     <span class="data-label">Current Time:</span> {formatted_time}
                 </div>
                 <div class="data-item">
-                    <span class="data-label">Hot:</span> {read_counter_from_file('hot')}
+                    <span class="data-label">Hot:</span> {hot_counter}
                 </div>
                 <div class="data-item">
-                    <span class="data-label">Cold:</span> {read_counter_from_file('cold')}
+                    <span class="data-label">Cold:</span> {cold_counter}
                 </div>
             </div>
         </body>
@@ -174,11 +180,6 @@ async def handle_client(reader, writer):
     finally:
         writer.close()
         await writer.wait_closed()
-
-async def web_server_task():
-    server = await asyncio.start_server(handle_client, "0.0.0.0", 80)
-    while True:
-        await asyncio.sleep(1)
 
 # Function to calculate daily consumption and send report
 def send_daily_report():
@@ -214,6 +215,7 @@ def send_monthly_report():
     send_text_to_telegram(BOT_TOKEN, CHAT_ID, message)
     print(message)
 
+# Function to handle other logic tasks
 async def other_logic_task():
     while True:
         # Adjust time for UTC+3
@@ -223,19 +225,19 @@ async def other_logic_task():
         # Check if it is 00:01 and send daily report
         if local_time[3] == 0 and local_time[4] == 1:
             send_daily_report()
-            await asyncio.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+            await asyncio.sleep(300)  # Sleep for 5 minutes to avoid multiple reports within the same hour
 
         # Check if it is 1st of the month and 00:01 and send monthly report
         if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
             send_monthly_report()
-            await asyncio.sleep(60)  # Sleep for 60 seconds to avoid multiple reports within the same minute
+            await asyncio.sleep(300)  # Sleep for 5 minutes to avoid multiple reports within the same hour
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(60)  # Regular check interval, adjust as needed
         gc.collect()  # Collect garbage to free up memory
 
 async def main():
     await asyncio.gather(
-        web_server_task(),
+        asyncio.start_server(handle_client, "0.0.0.0", 80),
         other_logic_task()
     )
 
