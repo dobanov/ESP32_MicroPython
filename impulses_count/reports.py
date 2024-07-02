@@ -19,7 +19,7 @@ def write_counter_to_file(filename, counter):
         print(f"Failed to write to {filename}: {e}")
 
 # Function to calculate consumption and send report
-def send_report(bot_token, chat_ids, period='daily'):
+def send_report(bot_token, chat_ids, period):
     if period not in ['daily', 'monthly']:
         raise ValueError("Invalid period. Use 'daily' or 'monthly'.")
 
