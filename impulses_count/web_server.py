@@ -1,9 +1,5 @@
 import socket
-
-# Function to read counter from file
-def read_counter_from_file(filename):
-    with open(filename, 'r') as file:
-        return file.read().strip()
+from file_rw import read_counter_from_file
 
 # HTML template
 HTML_TEMPLATE = """
@@ -70,7 +66,7 @@ def handle_client(conn):
     conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n'.encode() + response.encode())
     conn.close()
 
-# Start the web server
+# Function to start the web server
 def start_web_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('', 80))
@@ -78,6 +74,10 @@ def start_web_server():
     print('Web server started on port 80')
 
     while True:
-        conn, addr = s.accept()
-        print('Got connection from', addr)
-        handle_client(conn)
+        try:
+            conn, addr = s.accept()
+            print('Got connection from', addr)
+            handle_client(conn)
+        except Exception as e:
+            print('Exception:', e)
+            continue
