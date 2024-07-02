@@ -4,6 +4,7 @@ import utime
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
 from file_rw import read_counter_from_file, write_counter_to_file
+from web_server import start_web_server  # Import the web server function
 
 # Telegram bot token and chat IDs
 BOT_TOKEN = "YOUR_BOT_TOKEN"
@@ -92,6 +93,9 @@ def other_logic_task():
     except KeyboardInterrupt:
         print("Program terminated by user.")
         periodic_report_timer.deinit() 
+
+# Start the web server
+start_web_server()
 
 try:
     other_logic_task()
