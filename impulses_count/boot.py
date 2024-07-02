@@ -1,10 +1,7 @@
 import network
 import ntptime
 import utime
-
-# Wi-Fi configuration
-ssid = 'your_SSID'
-password = 'your_PASSWORD'
+from config import ssid, password
 
 # List of NTP servers to try
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
