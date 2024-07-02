@@ -23,6 +23,10 @@ def send_report(bot_token, chat_ids, period):
     if period not in ['daily', 'monthly']:
         raise ValueError("Invalid period. Use 'daily' or 'monthly'.")
 
+#    print(f"Preparing to send {period} report.")  # Debugging line
+#    print(f"Type of period: {type(period)}")
+#    print(f"Period value: '{period}'")
+    
     hot_last_period = read_counter_from_file(f'hot_last_{period}')
     hot_total = read_counter_from_file('hot')
     cold_last_period = read_counter_from_file(f'cold_last_{period}')
