@@ -3,7 +3,6 @@ import network
 import ntptime
 import utime
 import sys
-from web_server import start_web_server  # Import the web server function
 
 # Wi-Fi configuration
 ssid = 'your_SSID'
@@ -53,9 +52,6 @@ connect_wifi(ssid, password)
 
 # Get NTP time
 get_ntp_time()
-
-# Start the web server
-start_web_server()
 
 # Output current time in specified format
 current_time = utime.localtime()
