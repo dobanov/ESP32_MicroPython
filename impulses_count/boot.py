@@ -2,7 +2,6 @@
 import network
 import ntptime
 import utime
-import sys
 
 # Wi-Fi configuration
 ssid = 'your_SSID'
