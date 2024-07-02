@@ -68,6 +68,7 @@ def send_daily_report():
     if local_time[3] == 0 and local_time[4] == 1:
         send_report(BOT_TOKEN, CHAT_ID, 'daily')
         utime.sleep(60)
+	gc.collect()  # Call garbage collector
 
 def send_monthly_report():
     local_time = adjust_time_for_utc_plus_3()
@@ -75,6 +76,7 @@ def send_monthly_report():
     if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
         send_report(BOT_TOKEN, CHAT_ID, 'monthly')
         utime.sleep(60)
+	gc.collect()  # Call garbage collector
 
 def other_logic_task():
     def periodic_report_timer_callback(timer):
