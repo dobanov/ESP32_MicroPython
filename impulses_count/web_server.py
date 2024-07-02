@@ -2,6 +2,8 @@ import socket
 import utime
 from file_rw import read_counter_from_file
 
+time_zone = 3  # UTC+3
+
 # HTML template
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -58,20 +60,14 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Function to adjust time for UTC+3
-def adjust_time_for_utc_plus_3():
-    local_time = list(utime.localtime())
-    local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
-    return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(local_time[0], local_time[1], local_time[2], local_time[3], local_time[4], local_time[5])
-
 # Function to handle client connections
 def handle_client(conn):
     request = conn.recv(1024)
-    print('Content = %s' % str(request))
+    # print('Content = %s' % str(request))
 
     cold_value = read_counter_from_file('cold')
     hot_value = read_counter_from_file('hot')
-    current_time = adjust_time_for_utc_plus_3()
+    current_time = f"{utime.localtime()[0]:04d}/{utime.localtime()[1]:02d}/{utime.localtime()[2]:02d} {(utime.localtime()[3] + time_zone) % 24:02d}:{utime.localtime()[4]:02d}:{utime.localtime()[5]:02d}"
 
     response = HTML_TEMPLATE.format(cold=cold_value, hot=hot_value, current_time=current_time)
     conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n'.encode() + response.encode())
