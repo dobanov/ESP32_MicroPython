@@ -53,6 +53,9 @@ connect_wifi(ssid, password)
 # Get NTP time
 get_ntp_time()
 
+# Start the web server
+start_web_server()
+
 # Output current time in specified format
 current_time = utime.localtime()
 print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}")
