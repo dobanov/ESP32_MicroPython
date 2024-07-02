@@ -1,4 +1,5 @@
 import socket
+import utime
 from file_rw import read_counter_from_file
 
 # HTML template
@@ -44,6 +45,9 @@ HTML_TEMPLATE = """
     <div class="container">
         <h1>ESP32 Data</h1>
         <div class="data-item">
+            <span class="data-label">Current Time (UTC+3):</span> {current_time}
+        </div>
+        <div class="data-item">
             <span class="data-label">Cold:</span> {cold}
         </div>
         <div class="data-item">
@@ -54,6 +58,12 @@ HTML_TEMPLATE = """
 </html>
 """
 
+# Function to adjust time for UTC+3
+def adjust_time_for_utc_plus_3():
+    local_time = list(utime.localtime())
+    local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
+    return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(local_time[0], local_time[1], local_time[2], local_time[3], local_time[4], local_time[5])
+
 # Function to handle client connections
 def handle_client(conn):
     request = conn.recv(1024)
@@ -61,14 +71,16 @@ def handle_client(conn):
 
     cold_value = read_counter_from_file('cold')
     hot_value = read_counter_from_file('hot')
+    current_time = adjust_time_for_utc_plus_3()
 
-    response = HTML_TEMPLATE.format(cold=cold_value, hot=hot_value)
+    response = HTML_TEMPLATE.format(cold=cold_value, hot=hot_value, current_time=current_time)
     conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n'.encode() + response.encode())
     conn.close()
 
 # Function to start the web server
 def start_web_server():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Set SO_REUSEADDR option
     s.bind(('', 80))
     s.listen(5)
     print('Web server started on port 80')
