@@ -3,8 +3,6 @@ from file_rw import read_counter_from_file, write_counter_to_file
 
 # Function to calculate consumption and send report
 def send_report(bot_token, chat_ids, period):
-    if period not in ['daily', 'monthly']:
-        raise ValueError("Invalid period. Use 'daily' or 'monthly'.")
 
 #    print(f"Preparing to send {period} report.")  # Debugging line
 #    print(f"Type of period: {type(period)}")
