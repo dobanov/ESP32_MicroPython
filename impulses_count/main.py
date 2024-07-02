@@ -1,6 +1,5 @@
 import gc
 import machine
-import uasyncio as asyncio
 import utime
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
@@ -21,7 +20,7 @@ message_sent_12 = False
 last_interrupt_time_14 = 0
 last_interrupt_time_12 = 0
 
-debounce_delay = 200  # Delay in milliseconds
+debounce_delay = 200   # Delay in milliseconds
 
 # Function to handle pin interrupts
 def handle_pin_interrupt(pin, pin_number, message_sent, last_interrupt_time, filename, description):
@@ -60,30 +59,41 @@ def handle_pin12_interrupt(pin):
 pin14.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin14_interrupt)
 pin12.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin12_interrupt)
 
-# Function to handle other logic tasks
-async def other_logic_task():
-    while True:
-        # Adjust time for UTC+3
-        local_time = list(utime.localtime())
-        local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
+def adjust_time_for_utc_plus_3():
+    local_time = list(utime.localtime())
+    local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
+    return local_time
 
-        # Check if it is 00:01 and send daily report
-        if local_time[3] == 0 and local_time[4] == 1:
-            send_report(BOT_TOKEN, CHAT_ID, 'daily')
-            await asyncio.sleep(300)  # Sleep for 5 minutes to avoid multiple reports within the same hour
+def send_daily_report():
+    local_time = adjust_time_for_utc_plus_3()
+	# Check if it is 00:01 and send daily report
+    if local_time[3] == 0 and local_time[4] == 1:
+        send_report(BOT_TOKEN, CHAT_ID, 'daily')
+        utime.sleep(60)
 
-        # Check if it is 1st of the month and 00:01 and send monthly report
-        if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
-            send_report(BOT_TOKEN, CHAT_ID, 'monthly')
-            await asyncio.sleep(300)  # Sleep for 5 minutes to avoid multiple reports within the same hour
+def send_monthly_report():
+    local_time = adjust_time_for_utc_plus_3()
+	# Check if it is 1st of the month and 00:01 and send monthly report
+    if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
+        send_report(BOT_TOKEN, CHAT_ID, 'monthly')
+        utime.sleep(60)
 
-        await asyncio.sleep(60)  # Regular check interval, adjust as needed
-        gc.collect()  # Collect garbage to free up memory
+def other_logic_task():
+    def periodic_report_timer_callback(timer):
+        send_daily_report()
+        send_monthly_report()
 
-async def main():
-    await other_logic_task()
+    periodic_report_timer = machine.Timer(-1)
+    periodic_report_timer.init(period=60000, mode=machine.Timer.PERIODIC, callback=periodic_report_timer_callback)
+
+    try:
+        while True:
+            utime.sleep(1)
+    except KeyboardInterrupt:
+        print("Program terminated by user.")
+        periodic_report_timer.deinit() 
 
 try:
-    asyncio.run(main())
+    other_logic_task()
 except KeyboardInterrupt:
     print("Program terminated by user.")
