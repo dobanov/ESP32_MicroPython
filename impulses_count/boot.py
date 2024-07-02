@@ -3,6 +3,7 @@ import network
 import ntptime
 import utime
 import sys
+from web_server import start_web_server  # Import the web server function
 
 # Wi-Fi configuration
 ssid = 'your_SSID'
