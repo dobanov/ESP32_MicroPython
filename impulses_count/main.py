@@ -93,9 +93,6 @@ def other_logic_task():
         print("Program terminated by user.")
         periodic_report_timer.deinit() 
 
-# Start the web server
-start_web_server()
-
 try:
     other_logic_task()
 except KeyboardInterrupt:
