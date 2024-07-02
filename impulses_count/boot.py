@@ -1,7 +1,7 @@
 import network
 import ntptime
 import utime
-from config import ssid, password
+from config import WIFI_SSID, WIFI_PASSWORD
 
 # List of NTP servers to try
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
@@ -10,12 +10,12 @@ ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
 time_zone = 3  # UTC+3
 
 # Function to connect to Wi-Fi
-def connect_wifi(ssid, password, retry_interval=5):
+def connect_wifi(WIFI_SSID, WIFI_PASSWORD, retry_interval=5):
     wifi = network.WLAN(network.STA_IF)
     wifi.active(True)
 
     while True:
-        wifi.connect(ssid, password)
+        wifi.connect(WIFI_SSID, WIFI_PASSWORD)
         print("Attempting to connect to Wi-Fi...")
 
         start_time = utime.time()
@@ -43,7 +43,7 @@ def get_ntp_time():
             print(f"Failed to synchronize time with {server}: {e}")
 
 # Attempt to connect to Wi-Fi
-connect_wifi(ssid, password)
+connect_wifi(WIFI_SSID, WIFI_PASSWORD)
 
 # Get NTP time
 get_ntp_time()
