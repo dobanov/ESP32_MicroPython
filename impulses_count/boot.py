@@ -55,4 +55,4 @@ get_ntp_time()
 
 # Output current time in specified format
 current_time = utime.localtime()
-print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}.{utime.time() % 1 * 1000:03.0f}")
+print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}")
