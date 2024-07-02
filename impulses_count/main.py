@@ -2,8 +2,6 @@ import gc
 import machine
 import uasyncio as asyncio
 import utime
-import urequests
-import ujson
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
 from file_rw import read_counter_from_file, write_counter_to_file
