@@ -64,12 +64,11 @@ HTML_TEMPLATE = """
 def handle_client(conn):
     request = conn.recv(1024)
     # print('Content = %s' % str(request))
-
-    cold_value = read_counter_from_file('cold')
-    hot_value = read_counter_from_file('hot')
-    current_time = f"{utime.localtime()[0]:04d}/{utime.localtime()[1]:02d}/{utime.localtime()[2]:02d} {(utime.localtime()[3] + time_zone) % 24:02d}:{utime.localtime()[4]:02d}:{utime.localtime()[5]:02d}"
-
-    response = HTML_TEMPLATE.format(cold=cold_value, hot=hot_value, current_time=current_time)
+    response = HTML_TEMPLATE.format(
+    cold=read_counter_from_file('cold'),
+    hot=read_counter_from_file('hot'),
+    current_time=f"{utime.localtime()[0]:04d}/{utime.localtime()[1]:02d}/{utime.localtime()[2]:02d} {(utime.localtime()[3] + time_zone) % 24:02d}:{utime.localtime()[4]:02d}:{utime.localtime()[5]:02d}"
+    )
     conn.sendall('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n'.encode() + response.encode())
     conn.close()
 
