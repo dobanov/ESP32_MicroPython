@@ -6,6 +6,7 @@ import urequests
 import ujson
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
+from file_rw import read_counter_from_file, write_counter_to_file
 
 # Telegram bot token and chat IDs
 BOT_TOKEN = "YOUR_BOT_TOKEN"
@@ -23,24 +24,6 @@ last_interrupt_time_14 = 0
 last_interrupt_time_12 = 0
 
 debounce_delay = 200  # Delay in milliseconds
-
-# Function to read counter from file
-def read_counter_from_file(filename):
-    try:
-        with open(filename, 'r') as file:
-            return int(file.read())
-    except (OSError, ValueError) as e:
-        print(f"Failed to read from {filename}. Creating file...")
-        write_counter_to_file(filename, 0)  # Create file if it doesn't exist
-        return 0
-
-# Function to write counter to file
-def write_counter_to_file(filename, counter):
-    try:
-        with open(filename, 'w') as file:
-            file.write(str(counter))
-    except OSError as e:
-        print(f"Failed to write to {filename}: {e}")
 
 # Function to handle pin interrupts
 def handle_pin_interrupt(pin, pin_number, message_sent, last_interrupt_time, filename, description):
