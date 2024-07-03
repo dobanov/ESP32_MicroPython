@@ -1,6 +1,7 @@
 import network
 import ntptime
 import utime
+import _thread  # Import the threading library
 from config import WIFI_SSID, WIFI_PASSWORD
 
 # List of NTP servers to try
@@ -48,6 +49,13 @@ connect_wifi(WIFI_SSID, WIFI_PASSWORD)
 # Get NTP time
 get_ntp_time()
 
+def web_server_task():
+    print("Starting web server...")  # Debugging line
+    start_web_server()
+
+# Start the web server in a separate thread
+_thread.start_new_thread(web_server_task, ())
+
 # Output current time in specified format
 current_time = utime.localtime()
-print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}")
+print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
