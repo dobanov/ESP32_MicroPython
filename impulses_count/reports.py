@@ -5,9 +5,9 @@ from config import BOT_TOKEN, CHAT_ID
 # Function to calculate consumption and send report
 def send_report(period):
 
-    print(f"Preparing to send {period} report.")  # Debugging line
-    print(f"Type of period: {type(period)}")
-    print(f"Period value: '{period}'")
+    # print(f"Preparing to send {period} report.")  # Debugging line
+    # print(f"Type of period: {type(period)}")
+    # print(f"Period value: '{period}'")
 
     hot_last_period = read_counter_from_file(f'hot_last_{period}')
     hot_total = read_counter_from_file('hot')
