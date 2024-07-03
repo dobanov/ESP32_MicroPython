@@ -31,7 +31,6 @@ def connect_wifi(WIFI_SSID, WIFI_PASSWORD, retry_interval=5):
             print('IP address:', wifi.ifconfig())
             return True
 
-
 # Function to get NTP time and adjust RTC
 def get_ntp_time():
     for server in ntp_servers:
