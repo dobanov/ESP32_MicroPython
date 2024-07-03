@@ -4,7 +4,6 @@ import utime
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
 from file_rw import read_counter_from_file, write_counter_to_file
-from web_server import start_web_server  # Import the web server function
 from config import BOT_TOKEN, CHAT_ID
 
 # Initialize pins
