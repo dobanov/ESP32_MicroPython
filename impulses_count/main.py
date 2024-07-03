@@ -1,7 +1,6 @@
 import gc
 import machine
 import utime
-import _thread  # Import the threading library
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
 from file_rw import read_counter_from_file, write_counter_to_file
@@ -85,13 +84,6 @@ def other_logic_task():
     except KeyboardInterrupt:
         print("Program terminated by user.")
         periodic_report_timer.deinit()
-
-def web_server_task():
-    print("Starting web server...")  # Debugging line
-    start_web_server()
-
-# Start the web server in a separate thread
-_thread.start_new_thread(web_server_task, ())
 
 try:
     other_logic_task()
