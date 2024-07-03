@@ -58,22 +58,17 @@ def handle_pin12_interrupt(pin):
 pin14.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin14_interrupt)
 pin12.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=handle_pin12_interrupt)
 
-def adjust_time_for_utc_plus_3():
-    local_time = list(utime.localtime())
-    local_time[3] = (local_time[3] + 3) % 24  # Adjust for UTC+3
-    return local_time
-
 def send_daily_report():
-    local_time = adjust_time_for_utc_plus_3()
-        # Check if it is 00:01 and send daily report
-    if local_time[3] == 0 and local_time[4] == 1:
+    current_time = utime.localtime()
+    # Check if it is 00:01 and send daily report
+    if current_time[3] == 3 and current_time[4] == 1:  # UTC+3 midnight
         send_report('daily')
         gc.collect()  # Call garbage collector
 
 def send_monthly_report():
-    local_time = adjust_time_for_utc_plus_3()
-        # Check if it is 1st of the month and 00:01 and send monthly report
-    if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
+    current_time = utime.localtime()
+    # Check if it is 1st of the month and 00:01 and send monthly report
+    if current_time[2] == 1 and current_time[3] == 3 and current_time[4] == 1:  # UTC+3 1st day of month
         send_report('monthly')
 
 def other_logic_task():
