@@ -69,22 +69,23 @@ def send_monthly_report():
     if current_time[2] == 1 and current_time[3] == 3 and current_time[4] == 1:  # UTC+3 1st day of month
         send_report('monthly')
 
-def other_logic_task():
-    def periodic_report_timer_callback(timer):
-        send_daily_report()
-        send_monthly_report()
+try:
+    def other_logic_task():
+        def periodic_report_timer_callback(timer):
+            send_daily_report()
+            send_monthly_report()
 
-    periodic_report_timer = machine.Timer(-1)
-    periodic_report_timer.init(period=60000, mode=machine.Timer.PERIODIC, callback=periodic_report_timer_callback)
+        periodic_report_timer = machine.Timer(-1)
+        periodic_report_timer.init(period=60000, mode=machine.Timer.PERIODIC, callback=periodic_report_timer_callback)
 
-    try:
         while True:
             utime.sleep(1)
-    except KeyboardInterrupt:
-        print("Program terminated by user.")
-        periodic_report_timer.deinit()
 
-try:
     other_logic_task()
-except KeyboardInterrupt:
-    print("Program terminated by user.")
+except Exception as e:
+    print(f"An error occurred: {e}")
+finally:
+    try:
+        periodic_report_timer.deinit()
+    except NameError:
+        pass
