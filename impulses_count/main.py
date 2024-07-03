@@ -1,6 +1,7 @@
 import gc
 import machine
 import utime
+import _thread  # Import the threading library
 from reports import send_report  # Import the send_report function
 from telegram import send_text_to_telegram  # Import the send_text_to_telegram function
 from file_rw import read_counter_from_file, write_counter_to_file
@@ -64,18 +65,16 @@ def adjust_time_for_utc_plus_3():
 
 def send_daily_report():
     local_time = adjust_time_for_utc_plus_3()
-	# Check if it is 00:01 and send daily report
+        # Check if it is 00:01 and send daily report
     if local_time[3] == 0 and local_time[4] == 1:
-        send_report(BOT_TOKEN, CHAT_ID, 'daily')
-        utime.sleep(60)
-	gc.collect()  # Call garbage collector
+        send_report('daily')
+        gc.collect()  # Call garbage collector
 
 def send_monthly_report():
     local_time = adjust_time_for_utc_plus_3()
-	# Check if it is 1st of the month and 00:01 and send monthly report
+        # Check if it is 1st of the month and 00:01 and send monthly report
     if local_time[2] == 1 and local_time[3] == 0 and local_time[4] == 1:
-        send_report(BOT_TOKEN, CHAT_ID, 'monthly')
-        utime.sleep(60)
+        send_report('monthly')
 
 def other_logic_task():
     def periodic_report_timer_callback(timer):
@@ -90,10 +89,14 @@ def other_logic_task():
             utime.sleep(1)
     except KeyboardInterrupt:
         print("Program terminated by user.")
-        periodic_report_timer.deinit() 
+        periodic_report_timer.deinit()
 
-# Start the web server
-start_web_server()
+def web_server_task():
+    print("Starting web server...")  # Debugging line
+    start_web_server()
+
+# Start the web server in a separate thread
+_thread.start_new_thread(web_server_task, ())
 
 try:
     other_logic_task()
