@@ -3,6 +3,7 @@ import ntptime
 import utime
 import _thread  # Import the threading library
 from config import WIFI_SSID, WIFI_PASSWORD
+from web_server import start_web_server  # Import the web server function
 
 # List of NTP servers to try
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
