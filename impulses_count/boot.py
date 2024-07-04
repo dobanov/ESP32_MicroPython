@@ -9,7 +9,7 @@ from web_server import start_web_server  # Import the web server function
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
 
 # Time zone setting
-time_zone = 3  # GMT+3
+time_zone = 3  # UTC+3
 
 # Function to connect to Wi-Fi
 def connect_wifi(WIFI_SSID, WIFI_PASSWORD, retry_interval=5):
@@ -31,6 +31,16 @@ def connect_wifi(WIFI_SSID, WIFI_PASSWORD, retry_interval=5):
             print('Connected to Wi-Fi')
             print('IP address:', wifi.ifconfig())
             return True
+
+# Function to monitor and maintain Wi-Fi connection
+def maintain_wifi_connection(WIFI_SSID, WIFI_PASSWORD, check_interval=60):
+    wifi = network.WLAN(network.STA_IF)
+    while True:
+        if not wifi.isconnected():
+            print("Wi-Fi disconnected, attempting to reconnect...")
+            connect_wifi(WIFI_SSID, WIFI_PASSWORD)
+            get_ntp_time()  # Resynchronize time after reconnection
+        utime.sleep(check_interval)
 
 # Function to get NTP time and adjust RTC
 def get_ntp_time():
@@ -56,6 +66,9 @@ def web_server_task():
 # Start the web server in a separate thread
 _thread.start_new_thread(web_server_task, ())
 
+# Start the Wi-Fi connection maintenance in a separate thread
+_thread.start_new_thread(maintain_wifi_connection, (WIFI_SSID, WIFI_PASSWORD,))
+
 # Output current time in specified format
 current_time = utime.localtime()
-print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}"
+print(f"{current_time[0] % 100:02d}/{current_time[1]:02d}/{current_time[2]:02d} {(current_time[3] + time_zone) % 24:02d}:{current_time[4]:02d}:{current_time[5]:02d}")
