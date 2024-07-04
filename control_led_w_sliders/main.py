@@ -92,6 +92,7 @@ def handle_client(conn):
 
 # Set up the socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Set SO_REUSEADDR option
 s.bind(('', 80))
 s.listen(5)
 
