@@ -58,15 +58,15 @@ pin12.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler=hand
 
 def send_daily_report():
     current_time = utime.localtime()
-    # Check if it is 00:01 and send daily report
-    if current_time[3] == 3 and current_time[4] == 1:  # UTC+3 midnight
+    # Check if it is 00:01 GMT+3 and send daily report
+    if current_time[3] == 21 and current_time[4] == 1:  # UTC 21:01 corresponds to 00:01 GMT+3
         send_report('daily')
         gc.collect()  # Call garbage collector
 
 def send_monthly_report():
     current_time = utime.localtime()
-    # Check if it is 1st of the month and 00:01 and send monthly report
-    if current_time[2] == 1 and current_time[3] == 3 and current_time[4] == 1:  # UTC+3 1st day of month
+    # Check if it is 1st of the month and 00:01 GMT+3 and send monthly report
+    if current_time[2] == 1 and current_time[3] == 21 and current_time[4] == 1:  # UTC 21:01 corresponds to 00:01 GMT+3
         send_report('monthly')
 
 try:
