@@ -9,7 +9,7 @@ from web_server import start_web_server  # Import the web server function
 ntp_servers = ['pool.ntp.org', 'ntp1.ntp-servers.net', 'time.microsoft.com']
 
 # Time zone setting
-time_zone = 3  # UTC+3
+time_zone = 3  # GMT+3
 
 # Function to connect to Wi-Fi
 def connect_wifi(WIFI_SSID, WIFI_PASSWORD, retry_interval=5):
